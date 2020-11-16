@@ -21,7 +21,8 @@ class QuoteItem(scrapy.Item):
 
 # TUTORIAL VERSION:
 from scrapy.item import Item, Field
-from scrapy.loader.processors import MapCompose, TakeFirst
+from itemloaders.processors import TakeFirst, MapCompose
+# deprecated from scrapy.loader.processors import MapCompose, TakeFirst
 from datetime import datetime
 
 
@@ -52,6 +53,7 @@ def parse_location(text):
 class QuoteItem(Item):
 
     # pre-processes input to this field with remove_quotes() function
+    url = Field(input_processor=MapCompose(str.strip), output_processor=TakeFirst())
     quote_content = Field(
         # MapCompose takes a list of functions to apply to the value
         # https://docs.scrapy.org/en/latest/_modules/itemloaders/processors.html
