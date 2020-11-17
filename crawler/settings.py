@@ -64,8 +64,9 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'crawler.pipelines.CrawlerPipeline': 100,  # 100 = execution order, lower = first, interval [0,1000]
-    'crawler.pipelines.QuotesPipelineCSV': 200,
-    'crawler.pipelines.QuotesDuplicatedPipeline': 300,
+    'crawler.pipelines.SolrPipeline': 200,
+    'crawler.pipelines.CSVPipeline': 300,
+    # 'crawler.pipelines.DuplicatedPipeline': 400,
 }
 
 

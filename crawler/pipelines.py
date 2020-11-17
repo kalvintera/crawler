@@ -5,55 +5,73 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
 import pandas as pd
+from datetime import datetime
+from .solrhandler import SolrHandler
+
 
 class CrawlerPipeline(object):
     def process_item(self, item, spider):
         return item
 
 
-class QuotesPipelineCSV(object):
+class SolrPipeline(object):
     def __init__(self):
-        self.schema = {"name": "", "bday": None, "born_loc": "", "bio": "", "quote": "", "tags": ""}
+        self.solr = SolrHandler()
 
     def process_item(self, item, spider):
-        """Save quotes in the database
-        This method is called for every item pipeline component
+        dic = dict()
+        # for key in dic.keys():
+        #    dic[key] = item[key]
+        dic["id"] = item["url"]
+        dic["title"] = item["title"]
+        dic["article"] = item["article"]
+        dic["pub_date"] = self.check_date(item["pub_date"])
+        dic["publisher"] = item["publisher"]
+        self.solr.update(dic, item["lang"])
+        return item
+
+    @staticmethod
+    def check_date(date):
+        date = str(date)
+        try:
+            strp = datetime.strptime(date, "%Y-%m-%d %H:%M:%S" if len(date) == 19 else "%Y-%m-%d")
+        except:
+            strp = '1900-01-01T00:00:01Z'
+        else:
+            strp = str(strp).replace(" ", "T") + "Z"
+        return strp
+
+
+class CSVPipeline(object):
+    def process_item(self, item, spider):
+        """Save orf articles in a CSV file.
+        This method is called for every item pipeline component.
         """
-        dic = {"name": "", "bday": None, "born_loc": "", "bio": "", "quote": "", "tags": ""}
-        dic["name"] = item["author_name"]
-        dic["bday"] = item["author_birthday"]
-        dic["born_loc"] = item["author_bornlocation"]
-        dic["bio"] = item["author_bio"]
-        dic["quote"] = item["quote_content"]
-        dic["tags"] = item["tags"]
+        dic = dict()
+        for key in dic.keys():
+            dic[key] = item[key]
 
         # just for test purposes...
         # opens a csv file, reads it and writes to it, every single time!
-        try:
-            df = pd.read_csv("../quotes.csv", sep=";")
 
-        except:
-            df = pd.DataFrame(columns=self.schema.keys())
-
-        finally:
-            df = df.append(dic, ignore_index=True)
-            df.to_csv("../quotes.csv", sep=";", index=False)
-
+        if "news_articles.csv" in os.listdir("."):
+            df = pd.read_csv("./news_articles.csv", sep=";")
+        else:
+            df = pd.DataFrame(columns=dic.keys())
+        df = df.append(dic, ignore_index=True)
+        df.to_csv("./news_articles.csv", sep=";", index=False)
         return item
 
 
 # just for test purposes
-class QuotesDuplicatedPipeline(object):
-
+class DuplicatedPipeline(object):
     def process_item(self, item, spider):
         try:
-            df = pd.read_csv("../quotes.csv", sep=";")
+            df = pd.read_csv("./news_articles.csv", sep=";")
         except Exception as e:
             print("Duplicates Error:", e)
         else:
-            df.drop_duplicates(subset="quote", keep="first", inplace=True)
-            df.to_csv("../quotes.csv", sep=";", index=False)
-
+            df.drop_duplicates(subset="url", keep="first", inplace=True)
+            df.to_csv("./news_articles.csv", sep=";", index=False)
         return item
