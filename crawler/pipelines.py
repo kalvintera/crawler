@@ -6,6 +6,7 @@
 
 # useful for handling different item types with a single interface
 import pandas as pd
+import os
 from datetime import datetime
 from .solrhandler import SolrHandler
 
@@ -49,18 +50,20 @@ class CSVPipeline(object):
         This method is called for every item pipeline component.
         """
         dic = dict()
-        for key in dic.keys():
+        for key in item.keys():
             dic[key] = item[key]
 
         # just for test purposes...
         # opens a csv file, reads it and writes to it, every single time!
 
         if "news_articles.csv" in os.listdir("."):
-            df = pd.read_csv("./news_articles.csv", sep=";")
+            df = pd.read_csv("news_articles.csv", sep=";")
         else:
             df = pd.DataFrame(columns=dic.keys())
+
         df = df.append(dic, ignore_index=True)
-        df.to_csv("./news_articles.csv", sep=";", index=False)
+        df.to_csv("news_articles.csv", sep=";", index=False)
+
         return item
 
 

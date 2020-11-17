@@ -29,7 +29,7 @@ class ORFSpider(scrapy.Spider):
                 urls.add(url)
                 article_item = ArticleItem()
                 article_item["url"] = url
-                article_item["publisher"] = "orf.at"
+                article_item["publisher"] = "ORF.at"
                 yield response.follow(url, self.parse_article, meta={'article_item': article_item})
 
         # go to Next page
