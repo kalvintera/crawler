@@ -7,6 +7,8 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+import pandas as pd
+
 BOT_NAME = 'crawler'
 
 SPIDER_MODULES = ['crawler.spiders']
@@ -14,18 +16,29 @@ NEWSPIDER_MODULE = 'crawler.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'crawler (+http://www.yourdomain.com)'
+USER_AGENT_LIST = pd.read_csv("./resources/user_agents.csv").user_agent[:2000]
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 " \
+             "Safari/537.36"
+
+# https://docs.sqlalchemy.org/en/13/dialects/sqlite.html
+# SQLAlchemy: sqlite://<user>:<pass>@<host>/<path/to/database.db>
+# DB SQLite connection
+CONNECTION_STRING = 'sqlite:///resources/database_urls.db'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 32
+
+# parallel processing of item pipelines, default: 100
+CONCURRENT_ITEMS = 100
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = .500
+RANDOMIZE_DOWNLOAD_DELAY = True
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -44,9 +57,10 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
+SPIDER_MIDDLEWARES = {
+     'crawler.middlewares.UserAgentMiddleware': 400,
 #    'crawler.middlewares.CrawlerSpiderMiddleware': 543,
-#}
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -62,23 +76,12 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+# overridden in spider(!!) because different spiders use different pipelines.
 ITEM_PIPELINES = {
-    'crawler.pipelines.CrawlerPipeline': 100,  # 100 = execution order, lower = first, interval [0,1000]
-    'crawler.pipelines.SolrPipeline': 200,
-    'crawler.pipelines.CSVPipeline': 300,
+#    'crawler.pipelines.CrawlerPipeline': 100,  # 100 = execution order, lower = first, interval [0,1000]
+#    'crawler.pipelines.SolrPipeline': 200,
+#    'crawler.pipelines.CSVPipeline': 300,
     # 'crawler.pipelines.DuplicatedPipeline': 400,
-}
-
-
-# PostGreSQL
-# https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04
-DATABASE = {
-    'drivername': 'postgres',
-    'host': 'localhost',
-    'port': '5432',
-    'username': 'authors',
-    'password': 'gast',
-    'database': 'authors'
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

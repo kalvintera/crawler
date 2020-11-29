@@ -4,7 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/items.html
 
 from scrapy.item import Item, Field
-from scrapy.loader.processors import MapCompose, TakeFirst
+from itemloaders.processors import MapCompose, TakeFirst
 from datetime import datetime
 
 
@@ -14,14 +14,18 @@ from datetime import datetime
 # TakeFirst processor takes the first value of the list
 
 def check_lang(lang):
+    # todo: use language module from text analyzer
     return lang if isinstance(lang, str) and lang in ["DE", "EN"] else None
 
 
+# todo: add fetch_date to ArticleItem
 class ArticleItem(Item):
     url = Field()
     title = Field()
     article = Field()
     pub_date = Field()
+    fetch_date = Field()
+    scrape_date = Field()
     publisher = Field()
     lang = Field(
         # MapCompose takes a list of functions to apply to the value
@@ -30,21 +34,12 @@ class ArticleItem(Item):
         # TakeFirst return the first value not the whole list
         # output_processor=TakeFirst()
         )
-"""
-class QuoteItem(Item):
 
-    # pre-processes input to this field with remove_quotes() function
-    # url = Field(input_processor=MapCompose(str.strip), output_processor=TakeFirst())
-    quote_content = Field(
-        # MapCompose takes a list of functions to apply to the value
-        # https://docs.scrapy.org/en/latest/_modules/itemloaders/processors.html
-        input_processor=MapCompose(remove_quotes),
-        # TakeFirst return the first value not the whole list
-        output_processor=TakeFirst()
-        )
-    author_name = Field(input_processor=MapCompose(str.strip), output_processor=TakeFirst())
-    author_birthday = Field(input_processor=MapCompose(convert_date), output_processor=TakeFirst())
-    author_bornlocation = Field(input_processor=MapCompose(parse_location), output_processor=TakeFirst())
-    author_bio = Field(input_processor=MapCompose(str.strip), output_processor=TakeFirst())
-    tags = Field()
-"""
+
+class UrlItem(Item):
+    url = Field()
+    start_url = Field()
+    previous_url = Field()
+    fetch_date = Field()
+    depth = Field()
+    retrieved = Field()

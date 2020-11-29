@@ -9,7 +9,7 @@ nltk.download("punkt")
 
 
 class ORFSpider(scrapy.Spider):
-    name = "orf"
+    name = "presse"
     # https://rss.orf.at/
     allowed_domains = ["orf.at"]
     # https://www.diepresse.com/105106/rss

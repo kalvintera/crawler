@@ -20,8 +20,8 @@ class ORFSpider(scrapy.Spider):
 
     def parse(self, response):
         self.logger.info('Parse function called on {}'.format(response.url))
-        last_modified = response.xpath
-        urls = response.xpath("//a[contains(@href, '/stories/')]/@href")
+        # last_modified = response.xpath
+        # urls = response.xpath("//a[contains(@href, '/stories/')]/@href")
         xml = response.body.decode("utf-8")
         urls = set()
         for url in re.findall(r'(https?://[^&"<>]+)', xml):
@@ -33,8 +33,8 @@ class ORFSpider(scrapy.Spider):
                 yield response.follow(url, self.parse_article, meta={'article_item': article_item})
 
         # go to Next page
-        #for a in response.css('li.next a'):
-        #    yield response.follow(a, self.parse)
+        # for a in response.css('li.next a'):
+        # yield response.follow(a, self.parse)
 
     def parse_article(self, response):
         article_item = response.meta['article_item']
@@ -47,3 +47,7 @@ class ORFSpider(scrapy.Spider):
         article_item["pub_date"] = article.publish_date if article.publish_date else find_date(response.body,
                                                                                                original_date=True)
         yield article_item
+
+
+
+

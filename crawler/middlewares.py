@@ -3,10 +3,33 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-from scrapy import signals
+# KD: random USER_AGENT_LIST
+from scrapy.utils.project import get_project_settings
+import random
 
+from scrapy import signals
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
+
+class UserAgentMiddleware(object):
+    """This middleware allows spiders to override the user_agent"""
+
+    def __init__(self, user_agent='Scrapy'):
+        settings = get_project_settings()
+        self.user_agent = settings.get('USER_AGENT_LIST')
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        o = cls(crawler.settings['USER_AGENT'])
+        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
+        return o
+
+    def spider_opened(self, spider):
+        self.user_agent = getattr(spider, 'user_agent', random.choice(self.user_agent))
+
+    def process_request(self, request, spider):
+        if self.user_agent:
+            request.headers.setdefault(b'User-Agent', random.choice(self.user_agent))
 
 
 class CrawlerSpiderMiddleware:
