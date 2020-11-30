@@ -13,27 +13,20 @@ from datetime import datetime
 # e.g. author name has one element but is returned as a list [‘Jimi Hendrix’]
 # TakeFirst processor takes the first value of the list
 
-def check_lang(lang):
-    # todo: use language module from text analyzer
-    return lang if isinstance(lang, str) and lang in ["DE", "EN"] else None
-
-
-# todo: add fetch_date to ArticleItem
 class ArticleItem(Item):
     url = Field()
     title = Field()
     article = Field()
     pub_date = Field()
-    fetch_date = Field()
     scrape_date = Field()
     publisher = Field()
-    lang = Field(
+    lang = Field()
         # MapCompose takes a list of functions to apply to the value
         # https://docs.scrapy.org/en/latest/_modules/itemloaders/processors.html
-        input_processor=MapCompose(check_lang),
+    #    input_processor=MapCompose(check_lang),
         # TakeFirst return the first value not the whole list
         # output_processor=TakeFirst()
-        )
+   #     )
 
 
 class UrlItem(Item):

@@ -10,3 +10,5 @@ ciso8601
 dateparser
 regex
 pysolr
+trafilatura
+langdetect

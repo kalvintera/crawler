@@ -17,7 +17,6 @@ from .handler_sqlite import Urls, db_connect, create_table
 
 
 class URLFilterPipeline(object):
-
     def __init__(self, filter_=None):
         self.filter = filter_
 
@@ -31,35 +30,6 @@ class URLFilterPipeline(object):
             return item
         else:
             raise DropItem("Pattern [%s] not in url [%s]" % (self.filter, item["url"]))
-
-
-class SolrPipeline(object):
-    def __init__(self):
-        self.solr = SolrHandler()
-
-    def process_item(self, item, spider):
-        dic = dict()
-        # for key in dic.keys():
-        #    dic[key] = item[key]
-        dic["id"] = item["url"]
-        dic["title"] = item["title"]
-        dic["article"] = item["article"]
-        dic["pub_date"] = self.check_date(item["pub_date"])
-        dic["publisher"] = item["publisher"]
-        self.solr.update(dic, item["lang"])
-
-        return item
-
-    @staticmethod
-    def check_date(date):
-        date = str(date)
-        try:
-            strp = datetime.strptime(date, "%Y-%m-%d %H:%M:%S" if len(date) == 19 else "%Y-%m-%d")
-        except:
-            strp = '1900-01-01T00:00:01Z'
-        else:
-            strp = str(strp).replace(" ", "T") + "Z"
-        return strp
 
 
 class SQLitePipeline(object):
@@ -120,6 +90,37 @@ class SQLDuplicatedPipeline(object):
             raise DropItem("Duplicate url found: %s" % item["url"])
         else:
             return item
+
+
+class SolrPipeline(object):
+    def __init__(self):
+        self.solr = SolrHandler()
+
+    def process_item(self, item, spider):
+        dic = dict()
+        if item["lang"] not in ["DE", "EN"]:
+            raise DropItem("Extracted article language %s no valid. %s" % item["lang"])
+        else:
+            dic["id"] = item["url"]
+            dic["title"] = item["title"]
+            dic["article"] = item["article"]
+            dic["pub_date"] = item["pub_date"].strftime('%Y-%m-%dT00:00:00Z')
+            dic["scrape_date"] = item["scrape_date"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            dic["publisher"] = item["publisher"]
+            self.solr.update(dic, item["lang"])
+            return item
+
+
+    @staticmethod
+    def check_date(date):
+        date = str(date)
+        try:
+            strp = datetime.strptime(date, "%Y-%m-%d %H:%M:%S" if len(date) == 19 else "%Y-%m-%d")
+        except:
+            strp = '1900-01-01T00:00:01Z'
+        else:
+            strp = str(strp).replace(" ", "T") + "Z"
+        return strp
 
 
 class CSVPipeline(object):

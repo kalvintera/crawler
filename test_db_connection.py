@@ -23,13 +23,14 @@ def create_table(engine):
 class Urls(Base):
     __tablename__ = "urls"
 
-    id = Column("id", Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     url = Column('url', Text())
     start_url = Column("start_url", Text())
     previous_url = Column("previous_url", Text())
     fetch_date = Column("fetch_date", DateTime)
     depth = Column("depth", Integer)
-    html = Column("html", Text())
+    retrieved = Column("retrieved", Integer)
+
     
     
 
@@ -41,21 +42,44 @@ Session = sessionmaker(bind=engine)
 from datetime import datetime
 
 session = Session()
-urls = Urls()
-urls.url = "www.testaa.kd"
-urls.start_url = "start.com"
-urls.previous_url = "prev.com"
-urls.fetch_date = datetime.today()#"1986-12-22 14:25:50"
-urls.depth = 0
-urls.html = "html body dummy"
-
+# session.query(MyUserClass).filter(MyUserClass.id.in_((123,456))).all()
 try:
-    session.add(urls)
+    urls = session.query(Urls.url, Urls.retrieved).filter(Urls.retrieved.in_((0,))).all()
+except:
+    session.rollback()
+else:
+    print(len(urls))
+    print(urls[250].url, urls[250].retrieved)
+
+session.query(Urls).filter(Urls.url.in_(tuple(url for url, _ in urls[:2]))).update({"retrieved":1})
+
+urls = session.query(Urls.url, Urls.retrieved).filter(Urls.retrieved == 1).all()
+print(urls)
+
+urls[0].retrieved += 1
+
+test = session.query(Urls).filter(Urls.retrieved == 1).all()
+start_urls = []
+for url in test[:2]:
+    start_urls += [url.url]
+    url.retrieved = 0
+session.commit()
+session.close()
+test = [url for url, _ in urls[:2]]
+print(tuple(url for url, _ in urls[:2]))url for url, _ in urls[:2]z
+
+start_urls = []
+try:
+    url_rows = session.query(Urls).filter(Urls.retrieved.in_((0,))).all()
+    for row in url_rows[:2]:
+        start_urls += [row.url]
+        url.retrieved = 1
     session.commit()
 
 except:
     session.rollback()
-    raise
-
+else:
+    print(len(urls))
+    print(urls[250].url, urls[250].retrieved)
 finally:
     session.close()

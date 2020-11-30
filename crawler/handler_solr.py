@@ -10,7 +10,7 @@ class SolrHandler:
                      "EN": pysolr.Solr('http://localhost:8983/solr/news_en/', always_commit=False, timeout=10)}
         self.lang = lang
 
-    def status(self, lang=None):
+    def status(self, lang="DE"):
         solr = self.solr[lang] if lang else self.solr[self.lang]
         try:
             return True if json.loads(solr.ping())["status"] == "OK" else False
