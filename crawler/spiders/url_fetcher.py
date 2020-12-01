@@ -5,6 +5,7 @@ from crawler.items import UrlItem
 from datetime import datetime
 from urllib.parse import urlparse
 import re
+from scrapy.utils.log import configure_logging
 import logging
 from scrapy.linkextractors import IGNORED_EXTENSIONS
 
@@ -15,6 +16,12 @@ class UrlFetcher(Spider):
     custom_settings = {"ITEM_PIPELINES": {"crawler.pipelines.URLFilterPipeline": 100,
                                           "crawler.pipelines.SQLDuplicatedPipeline": 200,
                                           "crawler.pipelines.SQLitePipeline": 300}}
+    configure_logging(install_root_handler=False)
+    logging.basicConfig(
+        filename='log_url_fetcher.txt',
+        format='%(levelname)s: %(message)s',
+        level=logging.INFO
+    )
 
     def __init__(self, start_url=None, depth=1, *args, **kwargs):
         #self.logger.info("[LE] Source: %s Depth: %s Kwargs: %s", root, depth)

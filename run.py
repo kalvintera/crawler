@@ -51,7 +51,7 @@ for domain in domain.values():
     for key, value in default_params.items():
         kwargs[key] = domain.get(key, value)
     logging.info("Add domain dict to process.crawl: %s", kwargs)
-    #process.crawl(**kwargs)
+    process.crawl(**kwargs)
 process.crawl("content_scraper")
 process.start()
 

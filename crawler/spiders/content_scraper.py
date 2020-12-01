@@ -6,7 +6,7 @@ from htmldate import find_date
 from langdetect import detect
 import json
 from crawler.items import ArticleItem
-from datetime import datetime
+from scrapy.utils.log import configure_logging
 import logging
 
 class ContentScraper(Spider):
@@ -15,6 +15,12 @@ class ContentScraper(Spider):
     custom_settings = {"ITEM_PIPELINES": {"crawler.pipelines.SolrPipeline": 300,
                                           "crawler.pipelines.SQLSetRetrievedPipeline": 400,
                                           }}
+    configure_logging(install_root_handler=False)
+    logging.basicConfig(
+            filename='log_content_scraper.txt',
+            format='%(levelname)s: %(message)s',
+            level=logging.INFO
+        )
 
     def parse(self, response):
         data_str = trafilatura.extract(response.body, json_output=True)
@@ -22,7 +28,7 @@ class ContentScraper(Spider):
         data = json.loads(data_str)
         date = find_date(response.body, original_date=True) #, outputformat='%Y-%m-%dT00:00:00Z')
         article = ArticleItem()
-        article["url"] = data["source"]
+        article["url"] = data["source"] or response.url
         article["title"] = data["title"]
         article["article"] = data["text"]
         article["pub_date"] = date #datetime.strptime(date, "%Y-%m-%d")
