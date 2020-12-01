@@ -26,7 +26,7 @@ class URLFilterPipeline(object):
         return cls(filter_)
 
     def process_item(self, item, spider):
-        if re.search(self.filter, item["url"]):
+        if self.filter is None or re.search(self.filter, item["url"]):
             return item
         else:
             raise DropItem("Pattern [%s] not in url [%s]" % (self.filter, item["url"]))
@@ -99,13 +99,13 @@ class SolrPipeline(object):
     def process_item(self, item, spider):
         dic = dict()
         if item["lang"] not in ["DE", "EN"]:
-            raise DropItem("Extracted article language %s no valid. %s" % item["lang"])
+            raise DropItem("Extracted article language %s is not valid." % item["lang"])
         else:
             dic["id"] = item["url"]
             dic["title"] = item["title"]
             dic["article"] = item["article"]
-            dic["pub_date"] = item["pub_date"].strftime('%Y-%m-%dT00:00:00Z')
-            dic["scrape_date"] = item["scrape_date"].strftime("%Y-%m-%dT%H:%M:%SZ")
+            dic["pub_date"] = self.check_date(item["pub_date"])
+            dic["index_date"] = self.check_date(datetime.now())
             dic["publisher"] = item["publisher"]
             self.solr.update(dic, item["lang"])
             return item
@@ -113,14 +113,50 @@ class SolrPipeline(object):
 
     @staticmethod
     def check_date(date):
-        date = str(date)
+        if isinstance(date, str):
+            try:
+                strp = datetime.strptime(date[:19], "%Y-%m-%d %H:%M:%S" if len(date[:19]) == 19 else "%Y-%m-%d")
+            except:
+                strp = '1900-01-01T00:00:01Z'
+            else:
+                strp = str(strp).replace(" ", "T") + "Z"
+            return strp
+        elif isinstance(date, datetime):
+            return date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class SQLSetRetrievedPipeline(object):
+    def __init__(self):
+        """
+        Initializes database connection and sessionmaker
+        Creates tables
+        """
+        engine = db_connect()
+        create_table(engine)
+        self.Session = sessionmaker(bind=engine)
+        self.session = None
+
+    def open_spider(self, spider):
+        self.session = self.Session()
+
+    def close_spider(self, spider):
+        self.session.close()
+
+    def process_item(self, item, spider):
+        """
+        Set flag for retrieved URLs.
+        """
         try:
-            strp = datetime.strptime(date, "%Y-%m-%d %H:%M:%S" if len(date) == 19 else "%Y-%m-%d")
+            url_rows = self.session.query(Urls).filter(Urls.url == item["url"]).all()
+            for row in url_rows:
+                row.retrieved = 1
+            self.session.commit()
         except:
-            strp = '1900-01-01T00:00:01Z'
-        else:
-            strp = str(strp).replace(" ", "T") + "Z"
-        return strp
+            self.session.rollback()
+            raise
+
+        return item
+
 
 
 class CSVPipeline(object):

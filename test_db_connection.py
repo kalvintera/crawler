@@ -68,6 +68,8 @@ session.close()
 test = [url for url, _ in urls[:2]]
 print(tuple(url for url, _ in urls[:2]))url for url, _ in urls[:2]z
 
+
+#################### check start urls
 start_urls = []
 try:
     url_rows = session.query(Urls).filter(Urls.retrieved.in_((0,))).all()
@@ -83,3 +85,11 @@ else:
     print(urls[250].url, urls[250].retrieved)
 finally:
     session.close()
+
+###################### check retrieved url
+
+url_rows = session.query(Urls).filter(Urls.url == "https://burgenland.orf.at/stories/3077961/").all()
+for row in url_rows:
+    row.retrieved = 1
+    print(row.url)
+session.commit()

@@ -49,7 +49,7 @@ class UrlFetcher(Spider):
         all_urls += self.get_rss_links(response.body.decode("utf-8"))
         all_urls = self.clean_urls(all_urls)
 
-        if response.meta['depth'] <= self.depth:
+        if response.meta['depth'] < self.depth:
             for url in all_urls:
                 yield Request(url, callback=self.parse, meta={"previous": response.url})
         for url in all_urls:
@@ -84,8 +84,8 @@ class UrlFetcher(Spider):
         # allowed_options = ['allow', 'deny', 'allow_domains', 'deny_domains']
         self.options["allow"] = self.options.get("allow")
         self.options["deny"] = self.options.get("deny")
-       # self.options["allow_domains"] = self.options.get("allow_domains", [])
-        #self.options["deny_domains"] = self.options.get("deny_domains", [])
+        self.options["allow_domains"] = self.options.get("allow_domains")
+        self.options["deny_domains"] = self.options.get("deny_domains")
 
     def clean_urls(self, urls):
         # take unique urls
@@ -106,8 +106,8 @@ class UrlFetcher(Spider):
                 drop = True
             if drop is False:
                 valid_urls += [url]
-            else:
-                logging.warning("clean_urls(): dropped URL: %s", url)
+            # else:
+            #    logging.warning("clean_urls(): dropped URL: %s", url)
         return valid_urls
 
     @staticmethod

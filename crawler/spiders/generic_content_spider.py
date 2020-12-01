@@ -4,7 +4,7 @@ import scrapy
 
 
 class Scraper(scrapy.spiders.Spider):
-    name = 'scraper'
+    name = 'generic_scraper_test'
 
     def __init__(self, page=None, config=None, mandatory=None, *args, **kwargs):
         self.page = page

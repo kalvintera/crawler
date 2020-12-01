@@ -10,9 +10,11 @@ from datetime import datetime
 import logging
 
 class ContentScraper(Spider):
-    name = 'parser'
+    name = 'content_scraper'
     start_urls = []
-    custom_settings = {"ITEM_PIPELINES": {"crawler.pipelines.SolrPipeline": 300,}}
+    custom_settings = {"ITEM_PIPELINES": {"crawler.pipelines.SolrPipeline": 300,
+                                          "crawler.pipelines.SQLSetRetrievedPipeline": 400,
+                                          }}
 
     def parse(self, response):
         data_str = trafilatura.extract(response.body, json_output=True)
@@ -23,12 +25,22 @@ class ContentScraper(Spider):
         article["url"] = data["source"]
         article["title"] = data["title"]
         article["article"] = data["text"]
-        article["pub_date"] = datetime.strptime(date, "%Y-%m-%d")
-        article["scrape_date"] = datetime.today()
+        article["pub_date"] = date #datetime.strptime(date, "%Y-%m-%d")
         article["publisher"] = data["source-hostname"]
-        article["lang"] = detect(data["excerpt"]).upper()
+        article["lang"] = self.get_lang(data)
         yield article
 
+    @staticmethod
+    def get_lang(data):
+        if isinstance(data["excerpt"], str) and len(data["excerpt"]) >= 150:
+            text = data["excerpt"]
+        elif isinstance(data["text"], str) and len(data["text"]) >= 150:
+            text = data["text"]
+        elif isinstance(data["title"], str) and len(data["text"]) >= 5:
+            text = data["title"]
+        else:
+            return None
+        return detect(text[:150]).upper()
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -44,9 +56,8 @@ class ContentScraper(Spider):
         start_urls = []
         try:
             url_rows = session.query(Urls).filter(Urls.retrieved.in_((0,))).all()
-            for row in url_rows[:2]:
+            for row in url_rows:
                 start_urls += [row.url]
-                row.retrieved = 1
             session.commit()
 
         except:
