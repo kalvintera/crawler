@@ -16,12 +16,12 @@ class UrlFetcher(Spider):
     custom_settings = {"ITEM_PIPELINES": {"crawler.pipelines.URLFilterPipeline": 100,
                                           "crawler.pipelines.SQLDuplicatedPipeline": 200,
                                           "crawler.pipelines.SQLitePipeline": 300}}
-    configure_logging(install_root_handler=False)
-    logging.basicConfig(
+    # configure_logging(install_root_handler=False)
+    # logging.basicConfig(
         # filename=f'logs/log_crawler_{datetime.now()}.txt',
-        format='%(levelname)s: %(message)s',
-        level=logging.DEBUG
-    )
+        # format='%(levelname)s: %(message)s',
+        # level=logging.WARNING
+    # )
 
     def __init__(self, start_url=None, depth=1, *args, **kwargs):
         #self.logger.info("[LE] Source: %s Depth: %s Kwargs: %s", root, depth)

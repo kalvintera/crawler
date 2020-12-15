@@ -6,13 +6,17 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
+from datetime import datetime
 import pandas as pd
 
 BOT_NAME = 'crawler'
 
 SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
+
+LOG_LEVEL = 'INFO'  # to only display errors
+LOG_FILE = 'logs/test_log.txt'
+# LOG_FORMAT = '%(levelname)s: %(message)s'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

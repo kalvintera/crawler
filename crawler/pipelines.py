@@ -157,7 +157,7 @@ class SolrPipeline(object):
 
     def close_spider(self, spider):
         self.solr.commit()
-        logging.info("Solr committed data.")
+        logging.debug("Solr committed data.")
 
     def process_item(self, item, spider):
         dic = dict()

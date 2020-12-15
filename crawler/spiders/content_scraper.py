@@ -18,11 +18,11 @@ class ContentScraper(Spider):
                                           "crawler.pipelines.SQLSetIndexedPipeline": 400,
                                           }}
     configure_logging(install_root_handler=False)
-    logging.basicConfig(
-            filename=f'logs/log_crawler_{datetime.now()}.txt',
-            format='%(levelname)s: %(message)s',
-            level=logging.DEBUG
-        )
+    # logging.basicConfig(
+    #        filename=f'logs/log_crawler_{datetime.now()}.txt',
+    #        format='%(levelname)s: %(message)s',
+    #        level=logging.WARNING
+    #    )
 
     def parse(self, response):
         data_str = trafilatura.extract(response.body, json_output=True)
