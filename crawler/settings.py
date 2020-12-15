@@ -15,7 +15,7 @@ SPIDER_MODULES = ['crawler.spiders']
 NEWSPIDER_MODULE = 'crawler.spiders'
 
 LOG_LEVEL = 'INFO'  # to only display errors
-LOG_FILE = 'logs/test_log.txt'
+LOG_FILE = f'logs/log_crawler_{datetime.now()}.txt'
 # LOG_FORMAT = '%(levelname)s: %(message)s'
 
 
