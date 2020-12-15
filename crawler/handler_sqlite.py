@@ -29,3 +29,6 @@ class Urls(Base):
     fetch_date = Column("fetch_date", DateTime)
     depth = Column("depth", Integer)
     retrieved = Column("retrieved", Integer)
+    indexed = Column("indexed", Integer)
+    cookies = Column("cookies", Integer)
+    use_case = Column("use_case", Text())

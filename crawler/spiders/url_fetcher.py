@@ -18,9 +18,9 @@ class UrlFetcher(Spider):
                                           "crawler.pipelines.SQLitePipeline": 300}}
     configure_logging(install_root_handler=False)
     logging.basicConfig(
-        filename='log_url_fetcher.txt',
+        # filename=f'logs/log_crawler_{datetime.now()}.txt',
         format='%(levelname)s: %(message)s',
-        level=logging.INFO
+        level=logging.DEBUG
     )
 
     def __init__(self, start_url=None, depth=1, *args, **kwargs):
@@ -28,7 +28,7 @@ class UrlFetcher(Spider):
         self.start_url = start_url
         self.options = kwargs
         self.depth = depth
-        self.clean_options()
+        # self.clean_options() not needed
         UrlFetcher.start_urls += [start_url]
         allow_domains = self.options.get('allow_domains')
         UrlFetcher.allowed_domains = allow_domains if isinstance(allow_domains, list) else [allow_domains]
@@ -66,7 +66,10 @@ class UrlFetcher(Spider):
             url_item["previous_url"] = response.meta.get("previous", None)
             url_item["fetch_date"] = datetime.now()
             url_item["depth"] = response.meta["depth"]
+            url_item["use_case"] = self.options.get("use_case")
             url_item["retrieved"] = 0
+            url_item["indexed"] = 0
+            url_item["cookies"] = 0
             yield url_item  #dict(link=url, meta=dict(source=self.source, depth=response.meta['depth']))
 
     def get_html_links(self, resp):
@@ -93,6 +96,7 @@ class UrlFetcher(Spider):
         self.options["deny"] = self.options.get("deny")
         self.options["allow_domains"] = self.options.get("allow_domains")
         self.options["deny_domains"] = self.options.get("deny_domains")
+        self.options["use_case"] = self.options.get("use_case")
 
     def clean_urls(self, urls):
         # take unique urls
@@ -166,18 +170,26 @@ class UrlFetcher(Spider):
         '''
         Parse and validate the input
         '''
+        ignore_extensions = ['.7z', '.7zip', '.bz2', '.rar', '.tar', '.tar.gz', '.xz', '.zip', '.mng', '.pct', '.bmp',
+                             '.gif', '.jpg', '.jpeg', '.png', '.pst', '.psp', '.tif', '.tiff', '.ai', '.drw', '.dxf',
+                             '.eps', '.ps', '.svg', '.cdr', '.ico', '.mp3', '.wma', '.ogg', '.wav', '.ra', '.aac',
+                             '.mid', '.au', '.aiff', '.3gp', '.asf', '.asx', '.avi', '.mov', '.mp4', '.mpg', '.qt',
+                             '.rm', '.swf', '.wmv', '.m4a', '.m4v', '.flv', '.webm', '.xls', '.xlsx', '.ppt', '.pptx',
+                             '.pps', '.doc', '.docx', '.odt', '.ods', '.odg', '.odp', '.css', '.pdf', '.exe', '.bin',
+                             '.rss', '.dmg', '.iso', '.apk', '.woff2']
         try:
             parsed_url = urlparse(url)
         except ValueError:
             return False
         if bool(parsed_url.scheme) is False or parsed_url.scheme not in ('http', 'https'):
             return False
-        if len(parsed_url.netloc) < 5 or \
-                (parsed_url.netloc.startswith('www.') and len(parsed_url.netloc) < 8):
+        if len(parsed_url.netloc) < 4 or \
+                (parsed_url.netloc.startswith('www.') and len(parsed_url.netloc) < 8) or ".." in parsed_url.netloc:
             return False
-        if url.endswith(tuple(IGNORED_EXTENSIONS)):
+        if url.endswith(tuple(ignore_extensions)):
             return False
         return True
+
 
 """def determine_feed(htmlstring):
     '''Try to extract the feed URL from the home page'''

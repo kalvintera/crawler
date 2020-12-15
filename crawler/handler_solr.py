@@ -1,6 +1,7 @@
 import pysolr
 import json
 import pandas as pd
+import logging
 from datetime import datetime
 
 # CLI command that deletes all data from a core:
@@ -24,6 +25,9 @@ class SolrHandler:
     def set_lang(self, lang=None):
         self.lang = lang if lang in ["DE", "EN"] else self.lang
 
+    def commit(self):
+        for core in self.solr.values():
+            core.commit()
 
     def update(self, data=None, lang=None):
         print("SolrHandler.update():")
@@ -34,13 +38,17 @@ class SolrHandler:
         solr = self.solr[self.lang]
 
         if isinstance(data, dict):
-            solr.add(data)
-            solr.commit()
+            try:
+                solr.add(data)
+            except:
+                logging.warning("Could not add data to Solr!")
 
-        elif isinstance(data, pd.DataFrame) and data.shape[0] > 0 and self.status(lang):
+        elif isinstance(data, pd.DataFrame) and data.shape[0] > 0: #and self.status(lang):
             for row in data.to_dict("index").values():
-                solr.add(row)
-            solr.commit()
+                try:
+                    solr.add(row)
+                except:
+                    logging.warning("Could not add row to Solr!")
         print("\tchanges committed to solr.")
 
     def delete(self, data=None, lang=None):
@@ -55,15 +63,11 @@ class SolrHandler:
             id_ = data["id"]
             if id_:
                 solr.delete(id=data["id"])
-                solr.commit()
 
         elif isinstance(data, pd.DataFrame) and data.shape[0] > 0 and self.status(lang):
             for id_ in data.index:
                 solr.delete(id=id_)
-            solr.commit()
-
         else:
             solr.delete(id=data)
-            solr.commit()
 
         print("\tchanges committed to solr.")

@@ -16,6 +16,27 @@ from .handler_solr import SolrHandler
 from .handler_sqlite import Urls, db_connect, create_table
 
 
+class CheckForCookieSites(object):
+    cookie_urls = ["kurier.at",
+                   "heute.at",
+                   "falter.at",
+                   "derstandard.at",
+                   "derstandard.de",
+                   "oe24.at",
+                   "tips.at",
+                   "nachrichten.at",
+                   "diepresse.com",
+                   "wienerzeitung.at"]
+
+    def process_item(self, item, spider):
+        for url in self.cookie_urls:
+            if url in item["url"]:
+                item["cookies"] = 1
+                break
+        return item
+
+
+
 class URLFilterPipeline(object):
     def __init__(self, filter_=None):
         self.filter = filter_
@@ -60,6 +81,9 @@ class SQLitePipeline(object):
         urls.fetch_date = item["fetch_date"]
         urls.depth = item["depth"]
         urls.retrieved = item["retrieved"]
+        urls.indexed = item["indexed"]
+        urls.cookies = item["cookies"]
+        urls.use_case = item["use_case"]
 
         try:
             self.session.add(urls)
@@ -91,10 +115,49 @@ class SQLDuplicatedPipeline(object):
         else:
             return item
 
+class FromSQLtoSolrPipeline(object):
+    def __init__(self):
+        """
+        Initializes database connection and sessionmaker
+        Creates tables
+        """
+        engine = db_connect()
+        create_table(engine)
+        self.Session = sessionmaker(bind=engine)
+        self.session = None
+
+    def open_spider(self, spider):
+        self.session = self.Session()
+
+    def close_spider(self, spider):
+        self.session.close()
+
+    def process_item(self, item, spider):
+        """
+        Get use case information if prevalent.
+        """
+        try:
+            row = self.session.query(Urls).filter(Urls.url == item["url"]).first()
+            item["use_case"] = row.use_case
+        except:
+            pass
+
+        return item
+
 
 class SolrPipeline(object):
     def __init__(self):
         self.solr = SolrHandler()
+
+    def open_spider(self, spider):
+        if not self.solr.status():
+            logging.warning("Solr instance not reached!")
+        else:
+            logging.info("Solr connection works.")
+
+    def close_spider(self, spider):
+        self.solr.commit()
+        logging.info("Solr committed data.")
 
     def process_item(self, item, spider):
         dic = dict()
@@ -107,6 +170,7 @@ class SolrPipeline(object):
             dic["pub_date"] = self.check_date(item["pub_date"])
             dic["index_date"] = self.check_date(datetime.now())
             dic["publisher"] = item["publisher"]
+            dic["use_case"] = item["use_case"]
             self.solr.update(dic, item["lang"])
             return item
 
@@ -125,7 +189,7 @@ class SolrPipeline(object):
             return date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-class SQLSetRetrievedPipeline(object):
+class SQLSetIndexedPipeline(object):
     def __init__(self):
         """
         Initializes database connection and sessionmaker
@@ -149,7 +213,7 @@ class SQLSetRetrievedPipeline(object):
         try:
             url_rows = self.session.query(Urls).filter(Urls.url == item["url"]).all()
             for row in url_rows:
-                row.retrieved = 1
+                row.indexed = 1
             self.session.commit()
         except:
             self.session.rollback()

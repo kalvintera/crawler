@@ -23,6 +23,7 @@ class ArticleItem(Item):
     article = Field()
     pub_date = Field(output_processor=TakeFirst())
     publisher = Field(output_processor=TakeFirst())
+    use_case = Field(output_processor=TakeFirst())
     lang = Field()
 
     # bla = Field(
@@ -41,3 +42,6 @@ class UrlItem(Item):
     fetch_date = Field()
     depth = Field()
     retrieved = Field()
+    indexed = Field()
+    use_case = Field(output_processor=TakeFirst())
+    cookies = Field()

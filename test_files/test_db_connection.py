@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Integer, String, Date, DateTime, Float, Boolean, Text)
 from scrapy.utils.project import get_project_settings
 from sqlalchemy.orm import sessionmaker
+import os
 
 
 Base = declarative_base()
@@ -13,16 +14,14 @@ def db_connect():
     Performs database connection using database settings from settings.py.
     Returns sqlalchemy engine instance
     """
-    return create_engine('sqlite:///resources/database_urls.db')
+    return create_engine('sqlite:///./resources/database_urls.db')
 
 
 def create_table(engine):
     Base.metadata.create_all(engine)
 
-
 class Urls(Base):
     __tablename__ = "urls"
-
     id = Column(Integer, primary_key=True)
     url = Column('url', Text())
     start_url = Column("start_url", Text())
@@ -30,9 +29,10 @@ class Urls(Base):
     fetch_date = Column("fetch_date", DateTime)
     depth = Column("depth", Integer)
     retrieved = Column("retrieved", Integer)
+    indexed = Column("indexed", Integer)
+    cookies = Column("cookies", Integer)
+    use_case = Column("use_case", Text())
 
-    
-    
 
 
 engine = db_connect()
@@ -66,7 +66,7 @@ for url in test[:2]:
 session.commit()
 session.close()
 test = [url for url, _ in urls[:2]]
-print(tuple(url for url, _ in urls[:2]))url for url, _ in urls[:2]z
+print(tuple(url for url, _ in urls[:2]))
 
 
 #################### check start urls
@@ -93,3 +93,9 @@ for row in url_rows:
     row.retrieved = 1
     print(row.url)
 session.commit()
+
+
+
+
+row = session.query(Urls).filter(Urls.url == "https://www.thinkers.ai/terms-of-use/").first()
+row.use_case
